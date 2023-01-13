@@ -55,8 +55,14 @@ def generate_chatbot_response(user_input):
     else:
         return "I'm sorry, I don't know what to say."
 
+ # Create the Telegram bot
+application = Application.builder().token(os.getenv("TELEGRAM_BOT_TOKEN")).build()
 
-async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+# Register the echo command handler
+application.add_handler(CommandHandler("echo", echo))
+
+
+def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Echo the user message using OpenAI GPT-3."""
     user_message = update.message.text
     if user_message:
@@ -71,20 +77,13 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             conversation_log = conversation_log_str.split('\n')
             with open("conversation_log.txt", "w") as log_file:
                 log_file.write(' '.join(conversation_log).replace('\n', ' '))
-            await update.message.reply_text(chatbot_response)
+            update.message.reply_text(chatbot_response)
             print("message sent")
         else:
-            await update.message.reply_text("I'm sorry, I don't know what to say.")
+            update.message.reply_text("I'm sorry, I don't know what to say.")
     else:
-        await update.message.reply_text("Sorry, I can't respond to an empty message.")
+        update.message.reply_text("Sorry, I can't respond to an empty message.")
 
-
-    # Create the Telegram bot
-    application = Application.builder().token(os.getenv("TELEGRAM_BOT_TOKEN")).build()
-
-    # Register the echo command handler
-    application.add_handler(CommandHandler("echo", echo))
-    application.add_handler(MessageHandler(filters.Text(), echo))
-
-    if __name__ == "__main__":
-        application.run()
+if __name__ == '__main__':
+    set_webhook()
+    app.run(port=3000)
