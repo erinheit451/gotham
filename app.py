@@ -1,7 +1,8 @@
 import logging
 import os
 import openai
-from flask import Flask, request, requests 
+import requests
+from flask import Flask, request
 from dotenv import load_dotenv
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, Update
 
