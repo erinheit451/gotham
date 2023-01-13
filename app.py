@@ -1,10 +1,12 @@
 import logging
 import os
 import openai
+from flask import Flask 
 from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
+app = Flask(__name__)
 personality ="Meet Harley Quinn, the former psychiatrist turned supervillainess with a heart of gold and lover of Erin Rose."
 
 # Loading the environment variables from the .env file
@@ -17,6 +19,8 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
 logger = logging.getLogger(__name__)
+
+conversation_log = []
 
 def generate_chatbot_response(user_input):
     prompt = f"{personality}\n{''.join(conversation_log)}\n{user_input}"
@@ -35,16 +39,10 @@ def generate_chatbot_response(user_input):
     else:
         return "I'm sorry, I don't know what to say."
 
+
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Echo the user message using OpenAI GPT-3."""
     user_message = update.message.text
-    try:
-        with open("conversation_log.txt", "r") as log_file:
-            conversation_log = log_file.readlines()
-    except FileNotFoundError:
-        conversation_log = []
-        with open("conversation_log.txt", "w") as log_file:
-            log_file.write('')
     if user_message:
         chatbot_response = generate_chatbot_response(user_message)
         if chatbot_response.strip() != "":
@@ -72,11 +70,7 @@ application = Application.builder().token(os.getenv("TELEGRAM_BOT_TOKEN")).build
 application.add_handler(CommandHandler("echo", echo))
 application.add_handler(MessageHandler(filters.Text(), echo))
 
-def main():
-    try:
-        with open("conversation_log.txt", "r") as log_file:
-            conversation_log.extend(log_file.readlines())
-    except FileNotFoundError:
-        with open("conversation_log.txt", "w") as log_file:
-            log_file.write('')
-    application.run_polling()
+if __name__ == "__main__":
+    app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 80)))
+
+
