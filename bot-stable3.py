@@ -72,6 +72,8 @@ application = Application.builder().token(os.getenv("TELEGRAM_BOT_TOKEN")).build
 application.add_handler(CommandHandler("echo", echo))
 application.add_handler(MessageHandler(filters.Text(), echo))
 
+conversation_log = []
+
 def main():
     try:
         with open("conversation_log.txt", "r") as log_file:
@@ -80,3 +82,7 @@ def main():
         with open("conversation_log.txt", "w") as log_file:
             log_file.write('')
     application.run_polling()
+
+if __name__ == "__main__":
+    main()
+    
