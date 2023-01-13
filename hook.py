@@ -1,13 +1,19 @@
 import os
-import requests
+import openai
+from flask import Flask, request
 
-TELEGRAM_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
-WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
+app = Flask(__name__)
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
-def set_webhook():
-    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/setWebhook"
-    data = {"url": WEBHOOK_URL}
-    requests.post(url, json=data)
+@app.route("/webhook", methods=["POST"])
+def webhook_handler():
+    # Get the update sent by Telegram
+    update = request.get_json()
+    if "message" in update:
+        user_input = update["message"]["text"]
+        # Do something with the user input
+        # ...
+    return "ok", 200
 
 if __name__ == "__main__":
-    set_webhook()
+    app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 80)))
