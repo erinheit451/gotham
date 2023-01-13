@@ -4,13 +4,32 @@ import openai
 from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from flask import Flask, request
+
+app = Flask(__name__)
 
 personality ="Meet Harley Quinn, the former psychiatrist turned supervillainess with a heart of gold and lover of Erin Rose."
 
 # Loading the environment variables from the .env file
 load_dotenv()
 
+TELEGRAM_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
+WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
 openai.api_key = os.getenv("OPENAI_API_KEY")
+
+def set_webhook():
+    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/setWebhook"
+    data = {"url": WEBHOOK_URL}
+    request.post(url, json=data)
+
+@app.route("/webhook", methods=["POST"])
+def webhook_handler():
+    # Get the update sent by Telegram
+    update = request.get_json()
+    if "message" in update:
+        # Do something with the message
+        pass
+    return "ok", 200
 
 # Enable logging
 logging.basicConfig(
@@ -50,13 +69,9 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         if chatbot_response.strip() != "":
             conversation_log.append(f"{update.message.from_user.first_name}: {user_message}")
             conversation_log.append(f"Harley: {chatbot_response}")
-            max_characters = 5000
-            conversation_log_str = '\n'.join(conversation_log)
-            if len(conversation_log_str) > max_characters:
-                conversation_log_str = conversation_log_str[-max_characters:]
-            conversation_log = conversation_log_str.split('\n')
+            conversation_log = conversation_log[-5000:]
             with open("conversation_log.txt", "w") as log_file:
-                log_file.write(' '.join(conversation_log).replace('\n', ' '))
+                log_file.write("\n".join(conversation_log))
             await update.message.reply_text(chatbot_response)
             print("message sent")
         else:
@@ -83,6 +98,7 @@ def main():
             log_file.write('')
     application.run_polling()
 
-if __name__ == "__main__":
-    main()
+
+if __name__ == '__main__':
+    set_webhook()
     

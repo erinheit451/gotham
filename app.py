@@ -1,10 +1,10 @@
 import logging
 import os
 import openai
-import requests
-from flask import Flask, request
 from dotenv import load_dotenv
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, Update
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from flask import Flask, request
 
 app = Flask(__name__)
 
@@ -20,7 +20,7 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 def set_webhook():
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/setWebhook"
     data = {"url": WEBHOOK_URL}
-    requests.post(url, json=data)
+    request.post(url, json=data)
 
 @app.route("/webhook", methods=["POST"])
 def webhook_handler():
@@ -36,8 +36,6 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
 logger = logging.getLogger(__name__)
-
-conversation_log = []
 
 def generate_chatbot_response(user_input):
     prompt = f"{personality}\n{''.join(conversation_log)}\n{user_input}"
@@ -56,36 +54,50 @@ def generate_chatbot_response(user_input):
     else:
         return "I'm sorry, I don't know what to say."
 
- # Create the Telegram bot
-application = Application.builder().token(os.getenv("TELEGRAM_BOT_TOKEN")).build()
-
-
-
-
-def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Echo the user message using OpenAI GPT-3."""
     user_message = update.message.text
+    try:
+        with open("conversation_log.txt", "r") as log_file:
+            conversation_log = log_file.readlines()
+    except FileNotFoundError:
+        conversation_log = []
+        with open("conversation_log.txt", "w") as log_file:
+            log_file.write('')
     if user_message:
         chatbot_response = generate_chatbot_response(user_message)
         if chatbot_response.strip() != "":
             conversation_log.append(f"{update.message.from_user.first_name}: {user_message}")
             conversation_log.append(f"Harley: {chatbot_response}")
-            max_characters = 5000
-            conversation_log_str = '\n'.join(conversation_log)
-            if len(conversation_log_str) > max_characters:
-                conversation_log_str = conversation_log_str[-max_characters:]
-            conversation_log = conversation_log_str.split('\n')
+            conversation_log = conversation_log[-5000:]
             with open("conversation_log.txt", "w") as log_file:
-                log_file.write(' '.join(conversation_log).replace('\n', ' '))
-            update.message.reply_text(chatbot_response)
+                log_file.write("\n".join(conversation_log))
+            await update.message.reply_text(chatbot_response)
             print("message sent")
         else:
-            update.message.reply_text("I'm sorry, I don't know what to say.")
+            await update.message.reply_text("I'm sorry, I don't know what to say.")
     else:
-        update.message.reply_text("Sorry, I can't respond to an empty message.")
+        await update.message.reply_text("Sorry, I can't respond to an empty message.")
+
+
+# Create the Telegram bot
+application = Application.builder().token(os.getenv("TELEGRAM_BOT_TOKEN")).build()
 
 # Register the echo command handler
 application.add_handler(CommandHandler("echo", echo))
+application.add_handler(MessageHandler(filters.Text(), echo))
+
+conversation_log = []
+
+def main():
+    try:
+        with open("conversation_log.txt", "r") as log_file:
+            conversation_log.extend(log_file.readlines())
+    except FileNotFoundError:
+        with open("conversation_log.txt", "w") as log_file:
+            log_file.write('')
+    application.run_polling()
+
 
 if __name__ == '__main__':
     set_webhook()
