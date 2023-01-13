@@ -17,20 +17,6 @@ TELEGRAM_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-def set_webhook():
-    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/setWebhook"
-    data = {"url": WEBHOOK_URL}
-    request.post(url, json=data)
-
-@app.route("/webhook", methods=["POST"])
-def webhook_handler():
-    # Get the update sent by Telegram
-    update = request.get_json()
-    if "message" in update:
-        # Do something with the message
-        pass
-    return "ok", 200
-
 # Enable logging
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -81,10 +67,9 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 # Create the Telegram bot
-application = Application.builder().token(os.getenv("TELEGRAM_BOT_TOKEN")).build()
+application = Application.create(os.environ.get("TELEGRAM_BOT_TOKEN"))
 
 # Register the echo command handler
-application.add_handler(CommandHandler("echo", echo))
 application.add_handler(MessageHandler(filters.Text(), echo))
 
 conversation_log = []
@@ -100,5 +85,12 @@ def main():
 
 
 if __name__ == '__main__':
-    set_webhook()
+    app.run(port=int(os.environ.get('PORT', 5000)), host='0.0.0.0')
+    application.start_webhook(
+        listen="0.0.0.0",
+        port=int(os.environ.get("PORT", 5000)),
+        url_path=os.environ.get("TELEGRAM_BOT_TOKEN")
+    )
+    application.idle()
+
     
