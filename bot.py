@@ -50,9 +50,13 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         if chatbot_response.strip() != "":
             conversation_log.append(f"{update.message.from_user.first_name}: {user_message}")
             conversation_log.append(f"Harley: {chatbot_response}")
-            conversation_log = conversation_log[-5000:]
+            max_characters = 5000
+            conversation_log_str = '\n'.join(conversation_log)
+            if len(conversation_log_str) > max_characters:
+                conversation_log_str = conversation_log_str[-max_characters:]
+            conversation_log = conversation_log_str.split('\n')
             with open("conversation_log.txt", "w") as log_file:
-                log_file.write("\n".join(conversation_log))
+                log_file.write(' '.join(conversation_log).replace('\n', ' '))
             await update.message.reply_text(chatbot_response)
             print("message sent")
         else:
