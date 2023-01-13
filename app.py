@@ -58,8 +58,7 @@ def generate_chatbot_response(user_input):
  # Create the Telegram bot
 application = Application.builder().token(os.getenv("TELEGRAM_BOT_TOKEN")).build()
 
-# Register the echo command handler
-application.add_handler(CommandHandler("echo", echo))
+
 
 
 def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -83,6 +82,9 @@ def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             update.message.reply_text("I'm sorry, I don't know what to say.")
     else:
         update.message.reply_text("Sorry, I can't respond to an empty message.")
+
+# Register the echo command handler
+application.add_handler(CommandHandler("echo", echo))
 
 if __name__ == '__main__':
     set_webhook()
