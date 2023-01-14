@@ -3,7 +3,7 @@ import openai
 import requests
 from flask import Flask, request
 from telegram import Update
-from telegram.ext import Updater
+from telegram.ext import Updater, MessageHandler, filters
 
 app = Flask(__name__)
 
