@@ -67,8 +67,7 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 # Create the Telegram bot
-application = Application.create(os.environ.get("TELEGRAM_BOT_TOKEN"))
-
+application = Application.builder().token(os.environ.get("TELEGRAM_BOT_TOKEN")).build()
 
 conversation_log = []
 

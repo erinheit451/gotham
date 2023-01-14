@@ -10,7 +10,7 @@ personality ="Meet Harley Quinn, the former psychiatrist turned supervillainess 
 # Loading the environment variables from the .env file
 load_dotenv()
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
+pythopenai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Enable logging
 logging.basicConfig(
