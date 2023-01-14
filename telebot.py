@@ -1,6 +1,7 @@
 import logging
 import os
 import openai
+import requests 
 from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
@@ -17,10 +18,12 @@ TELEGRAM_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+@app.route("/set_webhook", methods=["GET"])
 def set_webhook():
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/setWebhook"
     data = {"url": WEBHOOK_URL}
-    request.post(url, json=data)
+    requests.post(url, json=data)
+    return 'webhook set'
 
 @app.route("/webhook", methods=["POST"])
 def webhook_handler():
