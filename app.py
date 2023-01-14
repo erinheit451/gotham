@@ -59,7 +59,7 @@ def generate_chatbot_response(user_input, conversation_log):
     else:
         return "I'm sorry, I don't know what to say."
 
-async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Echo the user message using OpenAI GPT-3."""
     user_message = update.message.text
     try:
@@ -77,12 +77,12 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             conversation_log = conversation_log[-5000:]
             with open("conversation_log.txt", "w") as log_file:
                 log_file.write("\n".join(conversation_log))
-            await update.message.reply_text(chatbot_response)
+            update.message.reply_text(chatbot_response)
             print("message sent")
         else:
-            await update.message.reply_text("I'm sorry, I don't know what to say.")
+            update.message.reply_text("I'm sorry, I don't know what to say.")
     else:
-        await update.message.reply_text("Sorry, I can't respond to an empty message.")
+        update.message.reply_text("Sorry, I can't respond to an empty message.")
 
 
 # Create the Telegram bot
