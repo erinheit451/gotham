@@ -69,8 +69,6 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 # Create the Telegram bot
 application = Application.create(os.environ.get("TELEGRAM_BOT_TOKEN"))
 
-# Register the echo command handler
-application.add_handler(MessageHandler(filters.Text(), echo))
 
 conversation_log = []
 
@@ -81,11 +79,9 @@ def main():
     except FileNotFoundError:
         with open("conversation_log.txt", "w") as log_file:
             log_file.write('')
-    application.run_polling()
-
+  
 
 if __name__ == '__main__':
-    app.run(port=int(os.environ.get('PORT', 5000)), host='0.0.0.0')
     application.start_webhook(
         listen="0.0.0.0",
         port=int(os.environ.get("PORT", 5000)),
