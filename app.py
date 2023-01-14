@@ -9,6 +9,8 @@ from flask import Flask, request
 
 app = Flask(__name__)
 
+conversation_log = []
+
 personality ="Meet Harley Quinn, the former psychiatrist turned supervillainess with a heart of gold and lover of Erin Rose."
 
 # Loading the environment variables from the .env file
@@ -41,6 +43,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 def generate_chatbot_response(user_input):
+    global conversation_log
     prompt = f"{personality}\n{''.join(conversation_log)}\n{user_input}"
     print(f"Input to GPT-3: {prompt}")
     response = openai.Completion.create(
@@ -90,7 +93,7 @@ application = Application.builder().token(os.getenv("TELEGRAM_BOT_TOKEN")).build
 application.add_handler(CommandHandler("echo", echo))
 application.add_handler(MessageHandler(filters.Text(), echo))
 
-conversation_log = []
+
 
 def main():
     try:
