@@ -2,12 +2,15 @@ import os
 import openai
 import requests
 from flask import Flask, request
+from telegram import Update
+from telegram.ext import Updater
 
 app = Flask(__name__)
 
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
 openai.api_key = os.getenv("OPENAI_API_KEY")
+bot = Updater(TELEGRAM_TOKEN, use_context=True)
 
 @app.route("/set_webhook", methods=["GET"])
 def set_webhook():
@@ -19,12 +22,13 @@ def set_webhook():
 @app.route("/webhook", methods=["POST"])
 def webhook_handler():
     # Get the update sent by Telegram
-    update = request.get_json()
-    if "message" in update:
+    update_json = request.get_json()
+    update = Update.de_json(update_json, bot)
+    if "message" in update_json:
         # Do something with the message
         user_message = update.message.text
         chatbot_response = generate_chatbot_response(user_message)
-        update.message.reply_text(chatbot_response)
+        bot.send_message(chat_id=update.message.chat_id, text=chatbot_response)
     return "ok", 200
 
 def generate_chatbot_response(user_input):
