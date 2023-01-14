@@ -42,8 +42,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def generate_chatbot_response(user_input):
-    global conversation_log
+def generate_chatbot_response(user_input, conversation_log):
     prompt = f"{personality}\n{''.join(conversation_log)}\n{user_input}"
     print(f"Input to GPT-3: {prompt}")
     response = openai.Completion.create(
