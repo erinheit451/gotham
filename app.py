@@ -1,9 +1,9 @@
 import os
 import openai
-from flask import Flask, request
-from telegram import Bot, Filters
 import telegram 
-from telegram.ext import Updater, CommandHandler, MessageHandler 
+from flask import Flask, request
+from telegram import Bot, Filters, Update
+from telegram.ext import Updater, CommandHandler, MessageHandler
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -13,6 +13,8 @@ WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 app = Flask(__name__)
+
+bot = Bot(TELEGRAM_TOKEN)
 
 def generate_response(prompt, user_input):
     prompt = user_input + " " + prompt
@@ -49,4 +51,3 @@ if __name__ == '__main__':
                           url_path=TELEGRAM_TOKEN)
     updater.bot.setWebhook(WEBHOOK_URL + TELEGRAM_TOKEN)
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", "8443")))
-
