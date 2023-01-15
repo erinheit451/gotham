@@ -1,8 +1,8 @@
 import os
 import openai
 from flask import Flask, request
-from telegram import Bot
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram import Bot, Filters 
+from telegram.ext import Updater, CommandHandler, MessageHandler 
 from dotenv import load_dotenv
 
 load_dotenv()
