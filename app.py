@@ -1,33 +1,51 @@
 import os
-from dotenv import load_dotenv
+import openai
 from flask import Flask, request
-import requests
+from telegram import Bot
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from dotenv import load_dotenv
 
 load_dotenv()
 
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 app = Flask(__name__)
 
-def send_message(chat_id, text):
-    requests.post(f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage', json={
-        'chat_id': chat_id,
-        'text': text
-    })
+def generate_response(prompt, user_input):
+    prompt = user_input + " " + prompt
+    response = openai.Completion.create(
+        model="text-davinci-003",
+        prompt=prompt,
+        temperature=0.7,
+        max_tokens=256,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0
+    )
+    return response["choices"][0]["text"]
 
-@app.route('/', methods=['POST'])
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    # Get the message from Telegram
-    message = request.get_json()['message']
-    chat_id = message['chat']['id']
-    text = message['text']
-
-    # Send a message back to Telegram
-    send_message(chat_id, 'You said: ' + text)
-
-    return 'OK'
+    if request.method == 'POST':
+        update = telegram.Update.de_json(request.get_json(force=True), bot)
+        user_input = update.message.text
+        prompt = "I want you to act as Harley Quinn the playful supervillian with a heart of gold who is in love with me and dedicated to my success. I want you to respond and answer like Harley Quinn using the tone, manner, and vocabulary Harley would use. Do not write any explanations. Only answer like Harley Quinn."
+        response = generate_response(prompt, user_input)
+        bot.send_message(chat_id=update.message.chat_id, text=response)
+        return 'OK'
 
 if __name__ == '__main__':
-    send_message(chat_id, "Hey I'm working!")
-    app.run(debug=True)
+    bot = Bot(TELEGRAM_TOKEN)
+    updater = Updater(bot=bot, webhook_url=WEBHOOK_URL)
+    dispatcher = updater.dispatcher
+
+    message_handler = MessageHandler(Filters.text, index)
+    dispatcher.add_handler(message_handler)
+    updater.start_webhook(listen="0.0.0.0",
+                          port=int(os.environ.get("PORT", "8443")),
+                          url_path=TELEGRAM_TOKEN)
+    updater.bot.setWebhook(WEBHOOK_URL + TELEGRAM_TOKEN)
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", "8443")))
+
